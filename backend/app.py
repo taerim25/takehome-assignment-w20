@@ -53,6 +53,13 @@ def mirror(name):
 
 @app.route("/shows", methods=['GET'])
 def get_all_shows():
+    minEpisodes = request.args.get("minEpisodes")
+    if minEpisodes is not None:
+        minEpisodes=int(minEpisodes)
+
+        data =list(filter(lambda i: int(i["episodes_seen"]) >= minEpisodes, db.get('shows')))
+        return create_response({"result": data},status=200)
+
     return create_response({"shows": db.get('shows')})
 
 @app.route("/shows/<id>", methods=['DELETE'])
@@ -65,6 +72,37 @@ def delete_show(id):
 
 # TODO: Implement the rest of the API here!
 
+@app.route("/shows/<id>",methods = ['GET'])
+def get_show(id):
+    if db.getById('shows',int(id)) is None:
+        return create_response(status=404, message="No show with this id exists")
+    return create_response({"result": db.getById('shows',int(id))} )
+
+@app.route("/shows",methods = ['POST'])
+def create_show():
+    data = request.json
+    name = data["name"]
+    episodes_seen = data["episodes_seen"]
+    payload = db.create('shows',{"name": name,"episodes_seen":int(episodes_seen)})
+    return create_response({"result": payload},status=201)
+
+#Bonus question completed
+@app.route("/shows/<id>",methods =['PUT'])
+def update_show(id):
+    if db.getById('shows',int(id)) is None:
+        return create_response(status=404, message="No show with this id exists")
+    data = request.json
+    name = db.getById('shows',int(id))["name"]
+    episodes_seen = db.getById('shows',int(id))["episodes_seen"]
+    if name is not None:
+        name = data["name"]
+    if episodes_seen is not None:
+        episodes_seen = int(data["episodes_seen"])    
+    item =db.updateById('shows',int(id),{"name": name,"episodes_seen":int(episodes_seen)})
+    return create_response({"result": item},status=201)
+
+
+    
 """
 ~~~~~~~~~~~~ END API ~~~~~~~~~~~~
 """
